@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Virtual Classroom</title>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1281.0.min.js"></script>
+  <script src="https://unpkg.com/amazon-chime-sdk-js@latest"></script>
+</head>
+<body>
+  <h1>Join Virtual Classroom</h1>
+  <button onclick="joinMeeting()">Join Meeting</button>
+  <div id="video-container"></div>
+
+  <script>
+    let meetingSession;
+
+    async function joinMeeting() {
+      // Fetch meeting and attendee information from your Lambda function
+      const response = await fetch('YOUR_LAMBDA_API_ENDPOINT');
+      const data = await response.json();
+
+      const meeting = data.meeting;
+      const attendee = data.attendee;
+
+      // Create a Chime SDK meeting session
+      const configuration = new ChimeSDK.MeetingSessionConfiguration(meeting, attendee);
+      meetingSession = new ChimeSDK.DefaultMeetingSession(configuration, new ChimeSDK.ConsoleLogger('ChimeSDK', ChimeSDK.LogLevel.INFO), new ChimeSDK.DefaultDeviceController());
+
+      // Start the meeting
+      const videoElement = document.getElementById('video-container');
+      const videoTile = await meetingSession.audioVideo.start();
+      videoTile.bindVideoElement(videoElement);
+    }
+  </script>
+</body>
+</html>
