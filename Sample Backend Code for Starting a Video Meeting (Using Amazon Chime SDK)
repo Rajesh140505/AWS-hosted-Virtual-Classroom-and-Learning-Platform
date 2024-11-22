@@ -1,0 +1,37 @@
+const AWS = require('aws-sdk');
+const chime = new AWS.Chime({ region: 'us-east-1' });
+chime.endpoint = new AWS.Endpoint('https://service.chime.aws.amazon.com/console');
+
+exports.handler = async (event) => {
+    const meetingRequest = {
+        ClientRequestId: 'meeting-' + Date.now(),
+        MediaRegion: 'us-east-1' // Choose a region closest to your user base
+    };
+
+    try {
+        const meetingResponse = await chime.createMeeting(meetingRequest).promise();
+
+        // Generate an attendee for the meeting
+        const attendeeRequest = {
+            MeetingId: meetingResponse.Meeting.MeetingId,
+            ExternalUserId: 'user-' + Date.now() // Use a unique ID for each user
+        };
+
+        const attendeeResponse = await chime.createAttendee(attendeeRequest).promise();
+
+        // Return the meeting and attendee details to the frontend
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                meeting: meetingResponse.Meeting,
+                attendee: attendeeResponse.Attendee
+            })
+        };
+    } catch (error) {
+        console.error('Error creating meeting or attendee', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error' })
+        };
+    }
+};
